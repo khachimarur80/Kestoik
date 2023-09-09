@@ -1,21 +1,22 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const path = require('path');
+const fs = require('fs');
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
-// Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
+let win
 
 async function createWindow() {
-  // Create the browser window.
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 800,
     height: 600,
+    frame: false,
     webPreferences: {
       preload: path.join(__dirname, '../src/preload.js'),
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
@@ -24,36 +25,26 @@ async function createWindow() {
   })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
-    // Load the url of the dev server if in development mode
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
   } else {
     createProtocol('app')
-    // Load the index.html when not in development
     win.loadURL('app://./index.html')
   }
 }
 
-// Quit when all windows are closed.
 app.on('window-all-closed', () => {
-  // On macOS it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
 
 app.on('activate', () => {
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
+
   if (BrowserWindow.getAllWindows().length === 0) createWindow()
 })
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
   if (isDevelopment && !process.env.IS_TEST) {
-    // Install Vue Devtools
     try {
       await installExtension(VUEJS_DEVTOOLS)
     } catch (e) {
@@ -61,9 +52,61 @@ app.on('ready', async () => {
     }
   }
   createWindow()
+  ipcMain.on('get-today', (event) => {
+    const filePath = path.join(__dirname, '../src/assets', 'data.json');
+    fs.readFile(filePath, 'utf-8', (err, data) => {
+      const dayList = JSON.parse(data);
+      const matchingDay = dayList.find(item => !item.finalized);
+
+      win.webContents.send('get-today-response', matchingDay || null);
+    });
+  });
+  ipcMain.on('save-today', (event, dayToSave) => {
+    const filePath = path.join(__dirname, '../src/assets', 'data.json');
+    fs.readFile(filePath, (err, data) => {
+      let dayList = JSON.parse(data);
+      const index = dayList.findIndex(item => !item.finalized);
+
+      if (index !== -1) {
+        dayList[index] = dayToSave;
+      }
+      else {
+        dayList.push(dayToSave);
+      }
+      fs.writeFile(filePath, JSON.stringify(dayList), ()=>{});
+      if (dayToSave.finalized) {
+          win.close();
+          app.quit()
+      }
+    });
+  });
+  ipcMain.on('close-window', (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (window) {
+      window.close();
+      app.quit()
+    }
+  });
+
+  ipcMain.on('minimize-window', (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (window) {
+      window.minimize();
+    }
+  });
+
+  ipcMain.on('expand-window', (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (window) {
+      if (window.isMaximized()) {
+        window.unmaximize();
+      } else {
+        window.maximize();
+      }
+    }
+  });
 })
 
-// Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {
     process.on('message', (data) => {
