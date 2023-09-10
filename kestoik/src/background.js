@@ -13,12 +13,13 @@ protocol.registerSchemesAsPrivileged([
 let win
 
 async function createWindow() {
+  const preloadFilePath = path.join(__dirname, '../src', 'preload.js');
   win = new BrowserWindow({
     width: 800,
     height: 600,
     frame: false,
     webPreferences: {
-      preload: path.join(__dirname, '../src/preload.js'),
+      preload: preloadFilePath,
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
       contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION
     }

@@ -5,7 +5,10 @@ module.exports = defineConfig({
   transpileDependencies: ['vuetify'],
   pluginOptions: {
     electronBuilder: {
-      preload: path.resolve(__dirname, 'src/preload.js'),
+      preload: 'src/preload.js',
+      builderOptions: {
+        extraResources: ['src'],
+      },
     },
   },
 });
