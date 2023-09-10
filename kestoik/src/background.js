@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, dialog } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const path = require('path');
@@ -105,6 +105,22 @@ app.on('ready', async () => {
         window.maximize();
       }
     }
+  });
+  ipcMain.on('save-day-file', (event, md) => {
+
+    const fileName = md[0].slice(2).replace(/\//g, '-') + '.md';
+    const desktopPath = require('os').homedir() + '/Desktop';
+  
+    const filePath = path.join(desktopPath, fileName);
+  
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+      if (err) {
+        fs.writeFile(filePath, md.join('\n'), (writeErr) => {});
+      } 
+      else {
+        fs.writeFile(filePath, md.join('\n'), (writeErr) => {});
+      }
+    });
   });
 })
 

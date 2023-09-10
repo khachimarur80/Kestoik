@@ -15,4 +15,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     closeWindow: () => ipcRenderer.send('close-window'),
     minimizeWindow: () => ipcRenderer.send('minimize-window'),
     expandWindow: () => ipcRenderer.send('expand-window'),
+    saveDayFile: (md) => ipcRenderer.send('save-day-file', md)
 })

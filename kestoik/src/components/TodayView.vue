@@ -410,9 +410,11 @@ export default {
         },
         endDay() {
             this.day.score = this.todayScore
+            this.$emit('download')
             this.day.finalized = true
         },
         saveDayData() {
+            this.day.score = this.todayScore
             window.electronAPI.saveToday(this.day)
         }
     },

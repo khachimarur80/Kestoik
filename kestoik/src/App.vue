@@ -63,9 +63,15 @@
             mdi-arrow-expand
           </v-icon>
         </v-btn>
+        <v-spacer></v-spacer>
+        <v-btn icon text dense x-small style="self-align: flex-end;" @click="download">
+          <v-icon>
+            mdi-download
+          </v-icon>
+        </v-btn>
       </div>
       <v-main>
-        <TodayView ref="todayChild" v-if="view==0"></TodayView>
+        <TodayView ref="todayChild" v-if="view==0" @download="download"></TodayView>
         <CampaignView v-if="view==1"></CampaignView>
         <DataView v-if="view==2"></DataView>
       </v-main>
@@ -100,6 +106,36 @@ export default {
     },
     expandWindow() {
       window.electronAPI.expandWindow()
+    },
+    capitalize(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    },
+    async download() {
+      const message = await new Promise(resolve => {
+        window.electronAPI.getToday()
+        window.electronAPI.response('get-today-response', resolve)
+      })
+      const md = []
+      md.push('# ' + message.day)
+      md.push('---')
+      md.push('## Logs')
+      message.activities.forEach(activity => {
+        md.push(this.capitalize(activity.name) + '[' + activity.start + '-' + activity.end + ']')
+        md.push('\t'+activity.observation)
+      })
+      md.push('## Objetivos')
+      message.objectives.forEach(objective => {
+        md.push(objective.name + ' : ' + objective.completion+'%')
+        md.push(objective.description)
+        objective.tasks.forEach(task => {
+          md.push('\t - '+task.name + ' : ' + task.completion+'%')
+        })
+      })
+      md.push('## Review')
+      md.push(this.capitalize(message.evaluation))
+      md.push('### Score : ' + message.score+'%')
+      md.push('---')
+      window.electronAPI.saveDayFile(md)
     }
   },
   created() {
@@ -123,6 +159,7 @@ export default {
   -webkit-app-region: drag;
   height: 30px;
   widows: 100%;
-  padding: 5px
+  padding: 5px;
+  display: flex;
 }
 </style>
