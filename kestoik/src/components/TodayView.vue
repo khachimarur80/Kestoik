@@ -1,5 +1,8 @@
 <template>
     <div id="today" :class="{'has-selected-tab' : selected!=''}">
+        <div class="day">
+            <h2>{{ day.day }}</h2>
+        </div>
         <div v-if="day" style="height: 100%; width: 100%; display: flex; flex-direction: column;">
             <div class="tabs">
                 <div class="tab-smoother">
@@ -475,6 +478,14 @@ export default {
     height: 100%;
     width: 100%;
     padding: 20px;
+}
+.day {
+    position: absolute;
+    top: -30px;
+    -webkit-app-region: drag;
+    width: 80px;
+    left: calc(50% - 60px);
+    user-select: none;
 }
 .column {
     flex: 1;
