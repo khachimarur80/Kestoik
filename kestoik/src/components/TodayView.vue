@@ -1,6 +1,6 @@
 <template>
     <div id="today" :class="{'has-selected-tab' : selected!=''}">
-        <div class="day">
+        <div class="day" v-if="day">
             <h2>{{ day.day }}</h2>
         </div>
         <div v-if="day" style="height: 100%; width: 100%; display: flex; flex-direction: column;">
@@ -173,7 +173,8 @@
                         <div v-for="(objective, i) in day.objectives" :key="i" class="frame-object">
                             <div class="object-review">
                                 <span>{{ objective.name }}</span>
-                                <div style="width: 120px">
+                                <v-spacer></v-spacer>
+                                <div style="width: 120px; margin-left: 20px;">
                                     <v-slider v-model="objective.completion" hide-details></v-slider>
                                 </div>
                                 <div class="d-flex">
@@ -191,7 +192,8 @@
                             </div>
                             <div v-for="(task, j) in objective.tasks" :key="j" class="object-task-review">
                                 <span>{{ task.name }}</span>
-                                <div style="width: 120px">
+                                <v-spacer></v-spacer>
+                                <div style="width: 120px; margin-left: 20px;">
                                     <v-slider v-model="task.completion" hide-details></v-slider>
                                 </div>
                                 <div class="d-flex">
@@ -691,7 +693,7 @@ export default {
 .object-review {
     width: 100%;
     display: flex;
-    justify-content: space-around;
+    justify-content: flex-start;
     align-items: center;
     border-left: 1px solid #aaa;
 }
@@ -699,7 +701,7 @@ export default {
     margin-left: 60px;
     width: 100%;
     display: flex;
-    justify-content: space-around;
+    justify-content: flex-start;
     align-items: center;
     border-left: 1px solid #aaa;
 }

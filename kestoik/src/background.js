@@ -76,7 +76,6 @@ app.on('ready', async () => {
       }
       fs.writeFile(filePath, JSON.stringify(dayList), ()=>{});
       if (dayToSave.finalized) {
-          win.close();
           app.quit()
       }
     });
@@ -84,7 +83,6 @@ app.on('ready', async () => {
   ipcMain.on('close-window', (event) => {
     const window = BrowserWindow.fromWebContents(event.sender);
     if (window) {
-      window.close();
       app.quit()
     }
   });
