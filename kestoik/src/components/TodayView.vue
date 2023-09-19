@@ -1,52 +1,52 @@
 <template>
-    <div id="today" :class="{'has-selected-tab' : selected!=''}">
-        <div class="day" v-if="day">
+    <div id="today" :class="{'has-selected-tab' : day.selected!=''}">
+        <div class="day" v-if="day.day">
             <h2>{{ day.day }}</h2>
         </div>
-        <div v-if="day" style="height: 100%; width: 100%; display: flex; flex-direction: column;">
+        <div v-if="day.day" style="height: 100%; width: 100%; display: flex; flex-direction: column;">
             <div class="tabs">
                 <div class="tab-smoother">
-                    <div class="tab-smoother-inner-right" style="width: 10px;" v-show="selected=='logs'">
+                    <div class="tab-smoother-inner-right" style="width: 10px;" v-show="day.selected=='logs'">
                     </div>
-                    <div class="tab-smoother-filler" v-show="selected!='logs'"></div>
+                    <div class="tab-smoother-filler" v-show="day.selected!='logs'"></div>
                 </div>
-                <div class="tab" :class="{ 'selected-tab' : selected=='logs' }">
+                <div class="tab" :class="{ 'selected-tab' : day.selected=='logs' }">
                     <div class="tab-inner" @click="setTab('logs')">
                         Logs
                     </div>
                 </div>
                 <div class="tab-smoother">
-                    <div class="tab-smoother-inner-left" v-show="selected=='logs'">
+                    <div class="tab-smoother-inner-left" v-show="day.selected=='logs'">
                     </div>
-                    <div class="tab-smoother-inner-right" v-show="selected=='objetivos'">
+                    <div class="tab-smoother-inner-right" v-show="day.selected=='objetivos'">
                     </div>
-                    <div class="tab-smoother-filler" v-show="selected=='reviews' || selected==''"></div>
+                    <div class="tab-smoother-filler" v-show="day.selected=='reviews' || day.selected==''"></div>
                 </div>
-                <div class="tab" :class="{ 'selected-tab' : selected=='objetivos' }">
+                <div class="tab" :class="{ 'selected-tab' : day.selected=='objetivos' }">
                     <div class="tab-inner" @click="setTab('objetivos')">
                         Objetivos
                     </div>
                 </div>
                 <div class="tab-smoother">
-                    <div class="tab-smoother-inner-left" v-show="selected=='objetivos'">
+                    <div class="tab-smoother-inner-left" v-show="day.selected=='objetivos'">
                     </div>
-                    <div class="tab-smoother-inner-right" v-show="selected=='reviews'">
+                    <div class="tab-smoother-inner-right" v-show="day.selected=='reviews'">
                     </div>
-                    <div class="tab-smoother-filler" v-show="selected=='logs' || selected==''"></div>
+                    <div class="tab-smoother-filler" v-show="day.selected=='logs' || day.selected==''"></div>
                 </div>
-                <div class="tab" :class="{ 'selected-tab' : selected=='reviews' }">
+                <div class="tab" :class="{ 'selected-tab' : day.selected=='reviews' }">
                     <div class="tab-inner" @click="setTab('reviews')">
                         Reviews
                     </div>
                 </div>
                 <div class="tab-smoother">
-                    <div class="tab-smoother-inner-left" style="width: 10px" v-show="selected=='reviews'">
+                    <div class="tab-smoother-inner-left" style="width: 10px" v-show="day.selected=='reviews'">
                     </div>
-                    <div class="tab-smoother-filler" v-show="selected!='reviews'"></div>
+                    <div class="tab-smoother-filler" v-show="day.selected!='reviews'"></div>
                 </div>
             </div>
             <div class="container">
-                <div class="frame" v-show="selected=='logs'">
+                <div class="frame" v-show="day.selected=='logs'">
                     <div class="create-activity">
                         <div class="d-flex align-center">
                             <v-text-field 
@@ -65,16 +65,30 @@
                     <div class="d-flex" style="width: 100%; height: calc(100% - 40px)">
                         <div class="activities">
                             <div v-for="(activity, i) in day.activities" :key="i" class="activity d-flex align-center">
-                                <v-btn color="success" icon tile :disabled="activity.completed" @click="completeActivity(activity)">
+                                <v-btn color="secondary" icon @click="completeActivity(activity)" v-if="!activity.completed">
                                     <v-icon>
-                                        mdi-check
+                                        mdi-circle-outline
                                     </v-icon>
                                 </v-btn>
-                                <span>{{ activity.start }} - </span>
-                                <span v-if="activity.end"> {{ activity.end }}</span>
+                                <v-btn color="success" icon @click="completeActivity(activity)" v-else>
+                                    <v-icon>
+                                        mdi-circle
+                                    </v-icon>
+                                </v-btn>
+                                <input class="time-input"
+                                    v-model="activity.start"
+                                    type="time"
+                                    hide-details="auto"
+                                >
+                                <span class="mr-1 ml-1">-</span>
+                                <input v-if="activity.end"
+                                    class="time-input"
+                                    v-model="activity.end"
+                                    type="time"
+                                    hide-details="auto"
+                                >
                                 <input class="activity-input"
                                     v-model="activity.name"
-                                    :disabled="activity.completed"
                                 >
                                 <v-spacer></v-spacer>
                                 <v-btn color="success" icon tile @click="editInfo(activity)" v-if="editActivityInfo==activity">
@@ -105,7 +119,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="frame" v-show="selected=='objetivos'">
+                <div class="frame" v-show="day.selected=='objetivos'">
                     <div class="d-flex align-center" style="height: 100%;">
                         <div class="objetives">
                             <div class="create-activity">
@@ -167,7 +181,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="frame" v-show="selected=='reviews'">
+                <div class="frame" v-show="day.selected=='reviews'">
                     <div class="frame-section">
                         <h3>Objectives</h3>
                         <div v-for="(objective, i) in day.objectives" :key="i" class="frame-object">
@@ -254,7 +268,7 @@
                         </div>
                         <br>
                         <div class="d-flex justify-center">
-                            <v-btn color="primary" @click="endDay">
+                            <v-btn color="primary" @click="endDay" outlined>
                                 Finish Day
                             </v-btn>
                         </div>
@@ -262,7 +276,7 @@
                 </div>
             </div>
         </div>
-        <div class="d-flex justify-center align-center" style="height: 100%" v-if="!day && !loading">
+        <div class="d-flex justify-center align-center" style="height: 100%" v-if="!day.day && !loading">
             <v-btn color="primary" @click="startDay">Start day!</v-btn>
         </div>
     </div>
@@ -279,6 +293,7 @@ class Day {
     this.objectives = []
     this.score = 0
     this.finalized = false
+    this.selected = ''
   }
 }
 
@@ -312,14 +327,13 @@ export default {
     name: 'TodayView',
 
     data: () => ({
-        selected: '',
         inputingActivity: '',
         editActivityInfo: null,
         inputingObjective: '',
         editingObjective: null,
         inputingTask: '',
         selectedAdditional: null,
-        day: null,
+        day: [],
         loading: true,
     }),
     methods: {
@@ -328,21 +342,21 @@ export default {
         },
         combinations(event) {
             if (event.metaKey && event.key=='1') {
-                this.selected = 'logs'
+                this.day.selected = 'logs'
             }
             else if (event.metaKey && event.key=='2') {
-                this.selected = 'objetivos'
+                this.day.selected = 'objetivos'
             }
             else if (event.metaKey && event.key=='3') {
-                this.selected = 'reviews'
+                this.day.selected = 'reviews'
             }
         },
         addAdditional() {
-            if (this.selectedAdditional) {
-                if (!this.day.additionals.includes(this.selectedAdditional)) {
-                    this.day.additionals.push(this.selectedAdditional)
+            if (this.day.selectedAdditional) {
+                if (!this.day.additionals.includes(this.day.selectedAdditional)) {
+                    this.day.additionals.push(this.day.selectedAdditional)
                 }
-                this.selectedAdditional = null
+                this.day.selectedAdditional = null
                 document.getElementById('addAdditional').blur()
             }
         },
@@ -359,11 +373,11 @@ export default {
             }
         },
         setTab(tab) {
-            if (tab==this.selected) {
-                this.selected = ''
+            if (tab==this.day.selected) {
+                this.day.selected = ''
             }
             else {
-                this.selected = tab
+                this.day.selected = tab
             }
         },
         editInfo(activity) {
@@ -380,9 +394,15 @@ export default {
             this.day.activities.push(activity)
         },
         completeActivity(activity) {
-            activity.completed = true
-            activity.end = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            document.getElementById('createActivity').focus()
+            if (activity.completed) {
+                activity.completed = false
+                activity.end = ''
+            }
+            else {
+                activity.completed = true
+                activity.end = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                document.getElementById('createActivity').focus()
+            }
         },
         completeObjective(objective) {
             objective.completed = true
@@ -477,9 +497,14 @@ export default {
 
 <style scoped>
 #today {
-    height: 100%;
-    width: 100%;
+    height: calc(100vh - 30px);
+    width: 100h;
+    overflow: hidden;
     padding: 20px;
+    margin-top: 30px;
+}
+#today input {
+    color: #fff !important;
 }
 .day {
     position: absolute;
@@ -507,8 +532,8 @@ export default {
     text-align: center;
     user-select: none;
     width: 20%;
-    border: 1px solid #aaa;
-    border-color: #fff;
+    border: 1px solid #fff;
+    border-color: rgb(19,19,19);
     border-bottom: 1px solid #ddd;
     border-radius: 5px 5px 0px 0px;
     padding-top: 2px;
@@ -530,16 +555,16 @@ export default {
     align-items: center;
 }
 .tab-inner:hover {
-    background: rgba(0,0,0,.15);
+    background: rgba(255,255,255,.15);
 }
 .selected-tab  {
-    border-top-color: #aaa;
-    border-left-color: #aaa;
-    border-right-color: #aaa;
-    border-bottom: 1px solid #fff;
+    border-top-color: #fff;
+    border-left-color: #fff;
+    border-right-color: #fff;
+    border-bottom: 1px solid rgb(19,19,19);
 }
 .tab-smoother {
-    border: 1px solid #fff;
+    border: 1px solid rgb(19,19,19);
     height: 10px;
     width: 8px;
     align-self: flex-end;
@@ -553,13 +578,13 @@ export default {
     width: 10px;
     position: absolute;
     transform: translateX(-2px);
-    background: #fff;
+    background: rgb(19,19,19);
 }
 .tab-smoother-inner-left {
     height: 10px;
     width: 10px;
-    background: #fff;
-    border: 1px solid #aaa;
+    background: rgb(19,19,19);
+    border: 1px solid #fff;
     border-top: none;
     border-radius: 0px 0px 0px 3px;
     border-right: none;
@@ -570,8 +595,8 @@ export default {
 .tab-smoother-inner-right {
     height: 10px;
     width: 10px;
-    background: #fff;
-    border: 1px solid #aaa;
+    background: rgb(19,19,19);
+    border: 1px solid #fff;
     border-top: none;
     border-left: none;
     border-radius: 0px 0px 3px 0px;
@@ -582,8 +607,8 @@ export default {
 .tab-smoother-filler {
     height: 10px;
     width: 10px;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
+    background: rgb(19,19,19);
+    border-bottom: 1px solid rgb(19,19,19);
     border-right: none;
     transform: translateX(-2px);
     position: absolute;
@@ -592,8 +617,8 @@ export default {
 .tab-smoother-inner {
     height: 10px;
     width: 10px;
-    background: #fff;
-    border: 1px solid #aaa;
+    background: rgb(19,19,19);
+    border: 1px solid #fff;
     border-top: none;
     border-radius: 0px 0px 3px 3px;
     transform: translateX(-2px);
@@ -607,6 +632,7 @@ export default {
     gap: 20px;
 }
 .container {
+    height: 100px;
     flex: 1;
     border: 1px solid #ddd;
     border-radius: 10px;
@@ -614,13 +640,13 @@ export default {
     z-index: 1;
 }
 .has-selected-tab .container{
-    border-color: #aaa;
+    border-color: #fff;
 }
 .has-selected-tab .tab:not(.selected-tab) {
-    border-bottom-color: #aaa;
+    border-bottom-color: #fff;
 }
 .has-selected-tab .tab-smoother-filler {
-    border-color: #aaa;
+    border-color: #fff;
 }
 .create-activity {
     width: 50%;
@@ -648,7 +674,12 @@ export default {
     padding: 0px;
     margin-left: 15px;
     padding-left: 5px;
-    border-left: 1px solid #aaa;
+    border-left: 1px solid #fff;
+    outline: none;
+}
+.time-input {
+    padding: 0px;
+    margin: 0px;
     outline: none;
 }
 .objective-title {
@@ -664,7 +695,7 @@ export default {
 .objetive-details {
     width: 100%;
     height: 100%;
-    border-left: 1px solid #aaa;
+    border-left: 1px solid #fff;
     padding: 20px;
 }
 .objective {
@@ -695,15 +726,20 @@ export default {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    border-left: 1px solid #aaa;
+    padding-left: 10px;
+    border-left: 1px solid #fff;
 }
 .object-task-review {
     margin-left: 60px;
-    width: 100%;
+    padding-left: 10px;
+    width: calc(100% - 60px);
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    border-left: 1px solid #aaa;
+    border-left: 1px solid #fff;
+}
+input[type="time"]::-webkit-calendar-picker-indicator {
+    display: none;
 }
 </style>
   

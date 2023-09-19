@@ -70,11 +70,9 @@
           </v-icon>
         </v-btn>
       </div>
-      <v-main>
-        <TodayView ref="todayChild" v-if="view==0" @download="download"></TodayView>
-        <CampaignView v-if="view==1"></CampaignView>
-        <DataView v-if="view==2"></DataView>
-      </v-main>
+      <TodayView ref="todayChild" v-if="view==0" @download="download"></TodayView>
+      <CampaignView v-if="view==1"></CampaignView>
+      <DataView v-if="view==2"></DataView>
     </v-app>
   </div>
 </template>
@@ -158,8 +156,11 @@ export default {
 .titlebar {
   -webkit-app-region: drag;
   height: 30px;
-  widows: 100%;
+  width: 100%;
   padding: 5px;
   display: flex;
+  position: fixed;
+  background: #191919;
+  z-index: 10;
 }
 </style>
