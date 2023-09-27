@@ -20,7 +20,7 @@
                     </div>
                     <div class="tab-smoother-inner-right" v-show="day.selected=='objetivos'">
                     </div>
-                    <div class="tab-smoother-filler" v-show="day.selected=='reviews' || day.selected==''"></div>
+                    <div class="tab-smoother-filler" v-show="day.selected=='reviews' || day.selected=='' || day.selected=='horarios'"></div>
                 </div>
                 <div class="tab" :class="{ 'selected-tab' : day.selected=='objetivos' }">
                     <div class="tab-inner" @click="setTab('objetivos')">
@@ -30,9 +30,21 @@
                 <div class="tab-smoother">
                     <div class="tab-smoother-inner-left" v-show="day.selected=='objetivos'">
                     </div>
+                    <div class="tab-smoother-inner-right" v-show="day.selected=='horarios'">
+                    </div>
+                    <div class="tab-smoother-filler" v-show="day.selected=='logs' || day.selected=='' || day.selected=='reviews'"></div>
+                </div>
+                <div class="tab" :class="{ 'selected-tab' : day.selected=='horarios' }">
+                    <div class="tab-inner" @click="setTab('horarios')">
+                        Horarios
+                    </div>
+                </div>
+                <div class="tab-smoother">
+                    <div class="tab-smoother-inner-left" v-show="day.selected=='horarios'">
+                    </div>
                     <div class="tab-smoother-inner-right" v-show="day.selected=='reviews'">
                     </div>
-                    <div class="tab-smoother-filler" v-show="day.selected=='logs' || day.selected==''"></div>
+                    <div class="tab-smoother-filler" v-show="day.selected=='logs' || day.selected=='' || day.selected=='objetivos'"></div>
                 </div>
                 <div class="tab" :class="{ 'selected-tab' : day.selected=='reviews' }">
                     <div class="tab-inner" @click="setTab('reviews')">
@@ -154,30 +166,6 @@
                                 outlined
                             >
                             </v-textarea>
-                            <h3>Tasks</h3>
-                            <div class="tasks">
-                                <v-text-field
-                                    hide-details 
-                                    solo 
-                                    dense 
-                                    outlined 
-                                    flat 
-                                    autofocus 
-                                    @keydown.enter="createTask" 
-                                    v-model="inputingTask"
-                                    style="width: 50%; margin-left: 25%;"
-                                >
-                                </v-text-field>
-                                <br>
-                                <div v-for="(task, i) in editingObjective.tasks" :key="i" class="task">
-                                    <span>{{task.name}}</span>
-                                    <v-btn @click="deleteTask(i)" x-small dense icon>
-                                        <v-icon>
-                                            mdi-close
-                                        </v-icon>
-                                    </v-btn>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -198,25 +186,6 @@
                                         </v-icon>
                                     </v-btn>
                                     <v-btn color="error" x-small dense icon @click="objective.completion=0">
-                                        <v-icon>
-                                            mdi-close
-                                        </v-icon>
-                                    </v-btn>
-                                </div>
-                            </div>
-                            <div v-for="(task, j) in objective.tasks" :key="j" class="object-task-review">
-                                <span>{{ task.name }}</span>
-                                <v-spacer></v-spacer>
-                                <div style="width: 120px; margin-left: 20px;">
-                                    <v-slider v-model="task.completion" hide-details></v-slider>
-                                </div>
-                                <div class="d-flex">
-                                    <v-btn color="success" x-small dense icon @click="task.completion=100">
-                                        <v-icon>
-                                            mdi-check
-                                        </v-icon>
-                                    </v-btn>
-                                    <v-btn color="error" x-small dense icon @click="task.completion=0">
                                         <v-icon>
                                             mdi-close
                                         </v-icon>
@@ -262,7 +231,7 @@
 
                         </v-textarea>
                         <div style="display: flex; justify-content: center; position:absolute; top: 20px; right: 20px;">
-                            <v-progress-circular :value="todayScore" width="5" size="50" color="primary">
+                            <v-progress-circular :value="todayScore" width="5" size="50" :color=scoreColor(todayScore)>
                                 {{ todayScore }}
                             </v-progress-circular>
                         </div>
@@ -271,6 +240,83 @@
                             <v-btn color="primary" @click="endDay" outlined>
                                 Finish Day
                             </v-btn>
+                        </div>
+                    </div>
+                </div>
+                <div class="frame" v-show="day.selected=='horarios'">
+                    <div class="horarios d-flex">
+                        <v-btn icon dense @click="newHorario">
+                            <v-icon>
+                                mdi-plus
+                            </v-icon>
+                        </v-btn>
+                        <v-btn
+                            v-for="(horario, i) in horarios" :key="i"
+                            outlined
+                            @click="inputingHorario=horario"
+                            class="ml-1 mr-1"
+                        >
+                            {{ horario.name }}
+                        </v-btn>
+                    </div>
+                    <div class="horario">
+                        <div class="tareas" v-if="inputingHorario">
+                            <div class="tarea" v-for="(tarea, i) in inputingHorario.tasks" :key="i">
+                                <v-checkbox v-model="tarea.completed"
+                                    dense
+                                    hide-details
+                                    :label="tarea.name"
+                                >
+                                </v-checkbox>
+                            </div>
+                        </div>
+                        <div class="horario-editor" v-if="inputingHorario">
+                            <v-card width="300" class="ma-3">
+                                <v-card-title>
+                                    <v-text-field
+                                        dense
+                                        hide-details
+                                        v-model="inputingHorario.name"
+                                    >
+                                    </v-text-field>
+                                </v-card-title>
+                                <v-card-text>
+                                    <h3>Description</h3>
+                                    <v-textarea
+                                        outlined
+                                        dense
+                                        hide-details
+                                        no-resize
+                                        :rows="2"
+                                        v-model="inputingHorario.description"
+                                        class="mb-2"
+                                    >
+                                    </v-textarea>
+                                    <h3>Tasks</h3>
+                                    <div class="d-flex align-center mt-2 mb-2" style="width: 50%;">
+                                        <v-text-field 
+                                            hide-details 
+                                            solo 
+                                            dense 
+                                            outlined 
+                                            flat 
+                                            @keydown.enter="createHorarioTask"
+                                            v-model="inputingTask" 
+                                            >
+                                        </v-text-field>
+                                    </div>
+                                    <div class="d-flex flex-wrap">
+                                        <v-chip 
+                                            v-for="(task, i) in inputingHorario.tasks" 
+                                            :key="i"
+                                            close
+                                            label
+                                            @click:close="removeTask(i)"
+                                            class="ma-1"
+                                        >{{ task.name }} </v-chip>
+                                    </div>
+                                </v-card-text>
+                            </v-card>
                         </div>
                     </div>
                 </div>
@@ -313,13 +359,21 @@ class Objective {
         this.campaign = null
         this.completion = 0
         this.description = ''
+        this.campaign = null
+        this.task = null
+    }
+}
+class Horario {
+    constructor() {
+        this.name = 'Horario'
         this.tasks = []
+        this.description = ''
     }
 }
 class Task {
     constructor(name) {
         this.name = name
-        this.completion = 0
+        this.completed = false
     }
 }
 
@@ -335,8 +389,26 @@ export default {
         selectedAdditional: null,
         day: [],
         loading: true,
+        inputingHorario: null,
+        horarios: [],
     }),
     methods: {
+        removeTask(i) {
+            this.inputingHorario.tasks.splice(i, 1)
+        },
+        createHorarioTask() {
+            let task = new Task(this.inputingTask)
+            this.inputingHorario.tasks.push(task)
+            this.inputingTask = ''
+        },
+        saveHorario() {
+
+        },
+        newHorario() {
+            let horario = new Horario
+            this.horarios.push(horario)
+            this.inputingHorario = horario
+        },
         removeAdditional(i) {
             this.day.additionals.splice(i, 1)
         },
@@ -421,24 +493,15 @@ export default {
                 this.editingObjective = objective
             }
         },
-        createTask() {
-            let task = new Task(this.inputingTask)
-            this.editingObjective.tasks.push(task)
-            this.inputingTask = ''
-        },
-        deleteTask(i) {
-            this.editingObjective.tasks.splice(i, 1)
-        },
         async startDay() {
             let day = new Day()
             this.day = day
         },
         endDay() {
-            this.day.score = this.todayScore
-            this.$emit('download')
             this.day.finalized = true
         },
         saveDayData() {
+            this.$emit('download')
             this.day.score = this.todayScore
             window.electronAPI.saveToday(this.day)
         }
@@ -447,16 +510,7 @@ export default {
         todayScore() {
             let score = 0;
             for (let i=0; i<this.day.objectives.length; i++) {
-                if (this.day.objectives[i].tasks.length) {
-                    let total = 0;
-                    for (let j=0; j<this.day.objectives[i].tasks.length; j++) {
-                        total += this.day.objectives[i].tasks[j].completion
-                    }
-                    score += total/this.day.objectives[i].tasks.length
-                }
-                else {
-                    score += this.day.objectives[i].completion
-                }
+                score += this.day.objectives[i].completion
             }
             if (this.day.objectives.length) {
                 return parseInt(score/this.day.objectives.length)
@@ -465,6 +519,14 @@ export default {
                 return 0
             }
         },
+        scoreColor() {
+            return (score) => {
+                if (score<=33) {return 'red'}
+                else if (score<=66) {return 'amber'}
+                else if (score<=100) {return 'success'}
+                else {return 'primary'}
+            }
+        }
     },
     async created() {
         const message = await new Promise(resolve => {
@@ -496,12 +558,12 @@ export default {
 </script>
 
 <style scoped>
+
 #today {
-    height: calc(100vh - 30px);
+    height: calc(100vh - 72px);
     width: 100h;
     overflow: hidden;
     padding: 20px;
-    margin-top: 30px;
 }
 #today input {
     color: #fff !important;
@@ -534,7 +596,7 @@ export default {
     width: 20%;
     border: 1px solid #fff;
     border-color: rgb(19,19,19);
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #888;
     border-radius: 5px 5px 0px 0px;
     padding-top: 2px;
     display: flex;
@@ -608,7 +670,7 @@ export default {
     height: 10px;
     width: 10px;
     background: rgb(19,19,19);
-    border-bottom: 1px solid rgb(19,19,19);
+    border-bottom: 1px solid #888;
     border-right: none;
     transform: translateX(-2px);
     position: absolute;
@@ -630,11 +692,12 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    overflow: scroll;
 }
 .container {
     height: 100px;
     flex: 1;
-    border: 1px solid #ddd;
+    border: 1px solid #888;
     border-radius: 10px;
     position: relative;
     z-index: 1;
@@ -740,6 +803,20 @@ export default {
 }
 input[type="time"]::-webkit-calendar-picker-indicator {
     display: none;
+}
+.horario {
+    width: 100%;
+    flex: 1;
+    display: flex;
+}
+.tareas {
+    height: 100%;
+    flex: 1;
+}
+.tarea {
+    width: 100%;
+    display: flex;
+    align-items: center;
 }
 </style>
   

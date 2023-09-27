@@ -1,52 +1,6 @@
 <template>
   <div style="height: 100vh; width: 100h;">
     <v-app >
-      <!--
-      <v-app-bar app flat class="title-bar" dense>
-        <div class="d-flex align-center">
-          <v-btn icon x-small dense class="mlr-2">
-            <v-icon small>
-              mdi-close
-            </v-icon>
-          </v-btn>
-          <v-btn icon x-small dense class="mlr-2">
-            <v-icon small>
-              mdi-minus
-            </v-icon>
-          </v-btn>
-          <v-btn icon x-small dense class="mlr-2">
-            <v-icon small>
-              mdi-arrow-expand
-            </v-icon>
-          </v-btn>
-        </div>
-        <v-spacer></v-spacer>
-        <div class="d-flex align-center justify-center">
-            <v-btn-toggle dense v-model="view">
-              <v-btn>Today</v-btn>
-              <v-btn>Campaigns</v-btn>
-              <v-btn>Progress</v-btn>
-            </v-btn-toggle>
-        </div>
-        <v-spacer></v-spacer>
-        <div class="d-flex align-center">
-          <v-btn icon text @click="settings=true" dense small>
-            <v-icon>mdi-cog-outline</v-icon>
-          </v-btn>
-          <v-dialog
-            v-model="settings"
-            fullscreen
-            hide-overlay
-          >
-            <v-card tile>
-              <v-btn @click="settings=false">
-                <v-icon>mdi-close</v-icon>
-              </v-btn>
-            </v-card>
-          </v-dialog>
-        </div>
-      </v-app-bar>
-      -->
       <div class="titlebar">
         <v-btn icon x-small dense class="mlr-2" @click="closeWindow()">
           <v-icon small>
@@ -69,6 +23,13 @@
             mdi-download
           </v-icon>
         </v-btn>
+      </div>
+      <div class="d-flex align-center justify-center mt-9">
+          <v-btn-toggle dense v-model="view">
+            <v-btn>Today</v-btn>
+            <v-btn>Campaigns</v-btn>
+            <v-btn>Progress</v-btn>
+          </v-btn-toggle>
       </div>
       <TodayView ref="todayChild" v-if="view==0" @download="download"></TodayView>
       <CampaignView v-if="view==1"></CampaignView>
@@ -125,9 +86,6 @@ export default {
       message.objectives.forEach(objective => {
         md.push(objective.name + ' : ' + objective.completion+'%')
         md.push(objective.description)
-        objective.tasks.forEach(task => {
-          md.push('\t - '+task.name + ' : ' + task.completion+'%')
-        })
       })
       md.push('## Review')
       md.push(this.capitalize(message.evaluation))

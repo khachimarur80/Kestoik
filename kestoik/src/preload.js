@@ -11,7 +11,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.on(channel, onceListener);
     },
     getToday: () => ipcRenderer.send('get-today'),
+    getDays: () => ipcRenderer.send('get-days'),
     saveToday: (day) => ipcRenderer.send('save-today', day),
+
+    getCampaign: (campaign) => ipcRenderer.send('get-campaign', campaign),
+    getCampaigns: () => ipcRenderer.send('get-campaigns'),
+    saveCampaigns: (campaigns) => ipcRenderer.send('save-campaigns', campaigns),
+
     closeWindow: () => ipcRenderer.send('close-window'),
     minimizeWindow: () => ipcRenderer.send('minimize-window'),
     expandWindow: () => ipcRenderer.send('expand-window'),

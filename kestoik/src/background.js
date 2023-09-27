@@ -1,11 +1,11 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, dialog, Notification } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const path = require('path');
 const fs = require('fs');
-const isDevelopment = process.env.NODE_ENV !== 'production'
+const isDevelopment = process.env.NODE_ENV === 'production'
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
@@ -18,6 +18,8 @@ async function createWindow() {
     width: 800,
     height: 600,
     frame: false,
+    roundedCorners: true,
+    hasShadow: true,
     webPreferences: {
       preload: preloadFilePath,
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
@@ -56,27 +58,95 @@ app.on('ready', async () => {
   ipcMain.on('get-today', (event) => {
     const filePath = path.join(__dirname, '../src/assets', 'data.json');
     fs.readFile(filePath, 'utf-8', (err, data) => {
-      const dayList = JSON.parse(data);
-      const matchingDay = dayList.find(item => !item.finalized);
+      if (err) {
+        fs.writeFile(filePath, '{"days":[], "campaigns":[]}', () => {});
+      }
+      else {
+        const dayList = JSON.parse(data)['days'];
+        const matchingDay = dayList.find(item => !item.finalized);
 
-      win.webContents.send('get-today-response', matchingDay || null);
+        win.webContents.send('get-today-response', matchingDay || null);
+      }
+    });
+  });
+  ipcMain.on('get-campaign', (event, campaignName) => {
+    const filePath = path.join(__dirname, '../src/assets', 'data.json');
+    fs.readFile(filePath, 'utf-8', (err, data) => {
+      if (err) {
+        fs.writeFile(filePath, '{"days":[], "campaigns":[]}', () => {});
+      }
+      else {
+        const campaignsList = JSON.parse(data)['campaigns'];
+        const matchingCampaign = campaignsList.find(item => item.name == campaignName);
+
+        win.webContents.send('get-campaign-response', matchingCampaign || null);
+      }
+    });
+  });
+  ipcMain.on('get-days', (event) => {
+    const filePath = path.join(__dirname, '../src/assets', 'data.json');
+    fs.readFile(filePath, 'utf-8', (err, data) => {
+      if (err) {
+        fs.writeFile(filePath, '{"days":[], "campaigns":[]}', () => {});
+      }
+      else {
+        const dayList = JSON.parse(data)['days'];
+        win.webContents.send('get-days-response', dayList);
+      }
+    });
+  });
+  ipcMain.on('get-campaigns', (event) => {
+    const filePath = path.join(__dirname, '../src/assets', 'data.json');
+    fs.readFile(filePath, 'utf-8', (err, data) => {
+      if (err) {
+        fs.writeFile(filePath, '{"days":[], "campaigns":[]}', () => {});
+      }
+      else {
+        const campaignsList = JSON.parse(data)['campaigns'];
+        win.webContents.send('get-campaigns-response', campaignsList || null);
+      }
     });
   });
   ipcMain.on('save-today', (event, dayToSave) => {
     const filePath = path.join(__dirname, '../src/assets', 'data.json');
     fs.readFile(filePath, (err, data) => {
-      let dayList = JSON.parse(data);
-      const index = dayList.findIndex(item => !item.finalized);
-
-      if (index !== -1) {
-        dayList[index] = dayToSave;
+      if (err) {
+        fs.writeFile(filePath, '{"days":[], "campaigns":[]}', () => {});
       }
       else {
-        dayList.push(dayToSave);
+        let totalData = JSON.parse(data)
+        const index = totalData['days'].findIndex(item => !item.finalized);
+
+        if (index !== -1) {
+          totalData['days'][index] = dayToSave;
+        }
+        else {
+          totalData['days'].push(dayToSave);
+        }
+        if (dayToSave.finalized) {
+          new Notification({
+            title: 'JSON DATA',
+            body: JSON.stringify(totalData['days'])
+          }).show()
+          fs.writeFile(filePath, JSON.stringify(totalData), ()=>{});
+          win.close()
+        }
+        fs.writeFile(filePath, JSON.stringify(totalData), ()=>{});
       }
-      fs.writeFile(filePath, JSON.stringify(dayList), ()=>{});
-      if (dayToSave.finalized) {
-          app.quit()
+    });
+  });
+  ipcMain.on('save-campaigns', (event, campaignsToSave) => {
+    const filePath = path.join(__dirname, '../src/assets', 'data.json');
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        fs.writeFile(filePath, '{"days":[], "campaigns":[]}', () => {});
+      }
+      else {
+        let totalData = JSON.parse(data)
+        console.log(totalData['campaigns'])
+        totalData['campaigns'] = campaignsToSave
+        console.log(totalData['campaigns'])
+        fs.writeFile(filePath, JSON.stringify(totalData), ()=>{});
       }
     });
   });
@@ -105,7 +175,6 @@ app.on('ready', async () => {
     }
   });
   ipcMain.on('save-day-file', (event, md) => {
-
     const fileName = md[0].slice(2).replace(/\//g, '-') + '.md';
     const desktopPath = require('os').homedir() + '/Desktop';
   
@@ -113,10 +182,10 @@ app.on('ready', async () => {
   
     fs.access(filePath, fs.constants.F_OK, (err) => {
       if (err) {
-        fs.writeFile(filePath, md.join('\n'), (writeErr) => {});
+        fs.writeFile(filePath, md.join('\n'), () => {});
       } 
       else {
-        fs.writeFile(filePath, md.join('\n'), (writeErr) => {});
+        fs.writeFile(filePath, md.join('\n'), () => {});
       }
     });
   });
@@ -135,3 +204,4 @@ if (isDevelopment) {
     })
   }
 }
+app.isPackaged
