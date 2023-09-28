@@ -9,6 +9,7 @@
                     :padding="padding"
                     :line-width="width"
                     :stroke-linecap="lineCap"
+                    :gradient="gradient"
                     :gradient-direction="gradientDirection"
                 ></v-sparkline>
             </div>
@@ -24,21 +25,84 @@
                     </v-card-text>
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn v-bind="props" color="primary" outlined>View
-                            <v-dialog
-                                activator="parent"
-                                width="auto"
-                            >
+                        <v-dialog>
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn
+                                    outlined
+                                    color="primary"
+                                    v-bind="attrs"
+                                    v-on="on"
+                                >View</v-btn>
+                            </template>
+                            <template v-slot:default="dialog">
                                 <v-card>
+                                    <v-card-title>
+                                        <div class="text-h4">{{ day.day }}</div>
+                                        <v-spacer></v-spacer>
+                                        <v-progress-circular value="day.score" width="5" size="50" :color=scoreColor(day.score)>
+                                            {{ day.score }}
+                                        </v-progress-circular>
+                                    </v-card-title>
                                     <v-card-text>
-                                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                                        <div class="text-h5 pt-5 pb-5">Logs</div>
+                                        <table class="query-list-table">
+                                            <colgroup>
+                                            <col>
+                                            <col>
+                                            <col>
+                                            </colgroup>
+                                            <thead>
+                                            <tr>
+                                                <th>Activity</th>
+                                                <th>Start</th>
+                                                <th>End</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="(activity, i) in day.activities" :key="i">
+                                                    <td>{{ activity.name }}</td>
+                                                    <td>{{ activity.start }}</td>
+                                                    <td>{{ activity.end }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div class="text-h5 pt-5 pb-5">Objectives</div>
+                                        <table class="query-list-table">
+                                            <colgroup>
+                                                <col>
+                                                <col>
+                                                <col>
+                                            </colgroup>
+                                            <thead>
+                                            <tr>
+                                                <th>Objective</th>
+                                                <th>Campaign</th>
+                                                <th>Completion</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="(objective, i) in day.objectives" :key="i">
+                                                    <td>{{ objective.name }}</td>
+                                                    <td>{{ objective.campaign }}</td>
+                                                    <td>{{ objective.completion }} %</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div class="text-h5 pt-5 pb-5" v-if="day.additionals.length">Aditional</div>
+                                        <div class="text" v-for="(additional, i) in day.additionals" :key="i">{{ additional }}</div>
+                                        <div class="text-h5 pt-5 pb-5">Evaluation</div>
+                                        <div class="text">{{ day.evaluation }}</div>
                                     </v-card-text>
-                                    <v-card-actions>
-                                        <v-btn color="primary" block @click="dialog = false">Close Dialog</v-btn>
+                                    <v-card-actions class="justify-end">
+                                        <v-btn
+                                            text
+                                            @click="dialog.value = false"
+                                        >Close</v-btn>
                                     </v-card-actions>
                                 </v-card>
-                            </v-dialog>
-                        </v-btn>
+                            </template>
+                        </v-dialog>
+                        <v-spacer></v-spacer>
                     </v-card-actions>
                 </v-card>
             </div>
@@ -56,7 +120,7 @@ function daysDiff(day1, day2) {
     var timeDiff = Math.abs(date1.getTime() - date2.getTime());
     var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-    return diffDays
+    return diffDays - 1
 }
 
 export default {
@@ -68,8 +132,10 @@ export default {
         padding: 8,
         lineCap: 'round',
         values: [],
-        gradientDirection: 'top',
+        gradient: [],
+        gradientDirection: 'left',
         days: [],
+        viewingDay: null,
     }),
 
     computed: {
@@ -91,13 +157,23 @@ export default {
         this.days = message
         if (message) {
             this.values.push(message[0].score)
+            if (message[0].score<=33) {this.gradient.push('#FF5252')}
+            else if (message[0].score<=66) {this.gradient.push('#FFC107')}
+            else if (message[0].score<=100) {this.gradient.push('#4CAF50')}
+            else {this.gradient.push('#2196F3')}
             for (let i=1; i<message.length; i++) {
                 this.values.push(message[i].score)
+                if (message[i].score<=33) {this.gradient.push('#FF5252')}
+                else if (message[i].score<=66) {this.gradient.push('#FFC107')}
+                else if (message[i].score<=100) {this.gradient.push('#4CAF50')}
+                else {this.gradient.push('#2196F3')}
+
                 for (let j=0; j<daysDiff(message[i].day, message[i-1].day); j++) {
                     this.values.push(0)
                 }
             }
         }
+        console.log(this.gradient)
     },
 };
 
@@ -129,6 +205,26 @@ export default {
         flex-wrap: wrap;
         justify-content: center;
         align-items: center;
+    }
+    .query-list-table {
+        width: 100%;
+        table-layout: fixed;
+    }
+    table {
+        border-collapse: collapse;
+    }
+    .query-list-table td, .query-list-table th {
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: fit-content !important;
+    }
+    table, th, td {
+        border: 1px solid #333;
+        text-align: center;
+        vertical-align: middle;
+        padding: 8px;
     }
 </style>
   
