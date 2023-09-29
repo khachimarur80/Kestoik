@@ -19,7 +19,31 @@
                         </div>
                     </div>
                 </div>
-                <p v-for="(campaign, i) in campaigns" :key="i">{{ campaign.name }} <v-btn icon small @click="removeCampaign(i)"><v-icon>mdi-close</v-icon></v-btn></p>
+                <div class="d-flex" style="gap: 10px; height: 100%;">
+                    <div class="campaigns">
+                        <v-card width="100%" height="100%" class="pa-2">
+                            <div v-for="(campaign, i)  in campaigns" :key="i" @mousedown="setEditingCampaign(campaign)" class="campaign text">
+                                {{ campaign.name }}
+                            </div>
+                        </v-card>
+                    </div>
+                    <div class="campaign-details" v-if="editingCampaign">
+                        <v-card width="100%" height="100%" class="pa-2">
+                            <div class="text-h4">
+                                <input style="outline: none;" v-model="editingCampaign.name">
+                            </div>
+                            <div class="text-h6 mt-3 mb-3">Description</div>
+                            <v-textarea 
+                                class="campaign-description" 
+                                v-model="editingCampaign.description"
+                                :rows="2"
+                                auto-grow
+                                outlined
+                            >
+                            </v-textarea>
+                        </v-card>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -41,8 +65,17 @@ export default {
     data: () => ({
         inputingCampaign: '',
         campaigns: [],
+        editingCampaign: null,
     }),
     methods: {
+        setEditingCampaign(campaign) {
+            if (this.editingCampaign == campaign) {
+                this.editingCampaign = null
+            }
+            else {
+                this.editingCampaign = campaign
+            }
+        },
         createCampaign() {
             if (this.inputingCampaign) {
                 let campaign = new Campaign(this.inputingCampaign)
@@ -113,5 +146,13 @@ export default {
         justify-content: center;
         align-items: center;
         margin-left: 25%;
+    }
+    .campaigns {
+        flex: 1;
+        height: 100%;
+    }
+    .campaign-details {
+        flex: 1;
+        height: 100%;
     }
 </style>

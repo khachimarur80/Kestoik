@@ -48,7 +48,7 @@
                 </div>
                 <div class="tab" :class="{ 'selected-tab' : day.selected=='reviews' }">
                     <div class="tab-inner" @click="setTab('reviews')">
-                        Reviews
+                        Review
                     </div>
                 </div>
                 <div class="tab-smoother">
@@ -132,40 +132,47 @@
                     </div>
                 </div>
                 <div class="frame" v-show="day.selected=='objetivos'">
-                    <div class="d-flex align-center" style="height: 100%;">
+                    <div class="create-activity">
+                        <div class="d-flex align-center">
+                            <v-text-field
+                                hide-details 
+                                solo 
+                                dense 
+                                outlined 
+                                flat 
+                                autofocus 
+                                @keydown.enter="createObjective" 
+                                v-model="inputingObjective" 
+                                id="createObjective">
+                            </v-text-field>
+                        </div>
+                    </div>
+                    <div class="d-flex" style="gap: 10px; height: 100%;">
                         <div class="objetives">
-                            <div class="create-activity">
-                                <div class="d-flex align-center">
-                                    <v-text-field
-                                        hide-details 
-                                        solo 
-                                        dense 
-                                        outlined 
-                                        flat 
-                                        autofocus 
-                                        @keydown.enter="createObjective" 
-                                        v-model="inputingObjective" 
-                                        id="createObjective">
-                                    </v-text-field>
+                            <v-card width="100%" height="100%" class="pa-2">
+                                <div v-for="(objective, i)  in day.objectives" :key="i" @mousedown="setEditingObjective(objective)" class="objective text">
+                                    {{ objective.name }}
                                 </div>
-                            </div>
-                            <br>
-                            <div v-for="(objective, i)  in day.objectives" :key="i" @mousedown="setEditingObjective(objective)" class="objective">
-                                {{ objective.name }}
-                            </div>
+                            </v-card>
                         </div>
                         <div class="objetive-details" v-if="editingObjective">
-                            <input class="objective-title" v-model="editingObjective.name">
-                            <br><br>
-                            <h3>Description</h3>
-                            <v-textarea 
-                                class="objective-description" 
-                                v-model="editingObjective.description"
-                                :rows="2"
-                                auto-grow
-                                outlined
-                            >
-                            </v-textarea>
+                            <v-card width="100%" height="100%" class="pa-2">
+                                <div class="text-h4">
+                                    <input style="outline: none;" v-model="editingObjective.name">
+                                </div>
+                                <div class="text-h6 mt-3 mb-3">Campaign</div>
+                                <v-autocomplete :items="campaigns">
+                                </v-autocomplete>
+                                <div class="text-h6 mt-3 mb-3">Description</div>
+                                <v-textarea 
+                                    class="objective-description" 
+                                    v-model="editingObjective.description"
+                                    :rows="2"
+                                    auto-grow
+                                    outlined
+                                >
+                                </v-textarea>
+                            </v-card>
                         </div>
                     </div>
                 </div>
@@ -534,6 +541,15 @@ export default {
             window.electronAPI.response('get-today-response', resolve)
         })
 
+        const campaigns = await new Promise(resolve => {
+            window.electronAPI.getCampaigns()
+            window.electronAPI.response('get-campaigns-response', resolve)
+        })
+
+        console.log(campaigns)
+
+        this.campaigns = campaigns
+
         if (message) {
             const dayInstance = new Day();
             for (const key of Object.keys(message)) {
@@ -745,21 +761,13 @@ export default {
     margin: 0px;
     outline: none;
 }
-.objective-title {
-    font-weight: bolder;
-    font-size: 24px;
-    text-align: center;
-    width: 100%;
-}
 .objetives {
-    width: 100%;
+    flex: 1;
     height: 100%;
 }
 .objetive-details {
-    width: 100%;
+    flex: 1;
     height: 100%;
-    border-left: 1px solid #fff;
-    padding: 20px;
 }
 .objective {
     user-select: none;
