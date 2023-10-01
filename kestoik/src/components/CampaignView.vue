@@ -19,9 +19,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="d-flex" style="gap: 10px; height: 100%;">
+                <div class="d-flex" style="gap: 10px; height: calc(100% - 60px);">
                     <div class="campaigns">
-                        <v-card width="100%" height="100%" class="pa-2">
+                        <v-card width="100%" style="min-height: 100%;" class="pa-2">
                             <div v-for="(campaign, i)  in campaigns" :key="i" @mousedown="setEditingCampaign(campaign)" class="campaign text">
                                 {{ campaign.name }}
                             </div>
@@ -36,7 +36,7 @@
                             <v-textarea 
                                 class="campaign-description" 
                                 v-model="editingCampaign.description"
-                                :rows="2"
+                                :rows="1"
                                 auto-grow
                                 outlined
                             >
@@ -120,13 +120,13 @@ export default {
         padding: 20px;
     }
     #campaigns input {
-        color: #fff !important;
+        color: var(--text-primary) !important;
     }
     .container {
         height: calc(100% - 26px);
         margin-top: 26px;
         flex: 1;
-        border: 1px solid #888;
+        border: 1px solid var(--background-dark);
         border-radius: 10px;
         position: relative;
         z-index: 1;
@@ -150,9 +150,13 @@ export default {
     .campaigns {
         flex: 1;
         height: 100%;
+        overflow: scroll;
     }
     .campaign-details {
         flex: 1;
         height: 100%;
+    }
+    .campaign {
+        user-select: none;
     }
 </style>

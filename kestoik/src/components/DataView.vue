@@ -19,8 +19,8 @@
                         {{ day.day }}
                     </v-card-title>
                     <v-card-text class="d-flex justify-center align-center">
-                        <v-progress-circular :value="day.score" width="5" size="50" :color="scoreColor(day.score)">
-                            {{ day.score }}
+                        <v-progress-circular :value="day.score" width="3" size="50" :color="scoreColor(day.score)">
+                            {{ scoreLetter(day.score) }}
                         </v-progress-circular>
                     </v-card-text>
                     <v-card-actions>
@@ -32,6 +32,7 @@
                                     color="primary"
                                     v-bind="attrs"
                                     v-on="on"
+                                    @click="viewingDay=day"
                                 >View</v-btn>
                             </template>
                             <template v-slot:default="dialog">
@@ -39,8 +40,8 @@
                                     <v-card-title>
                                         <div class="text-h4">{{ day.day }}</div>
                                         <v-spacer></v-spacer>
-                                        <v-progress-circular value="day.score" width="5" size="50" :color=scoreColor(day.score)>
-                                            {{ day.score }}
+                                        <v-progress-circular :value="day.score" width="3" size="50" :color=scoreColor(day.score)>
+                                            {{ scoreLetter(day.score) }}
                                         </v-progress-circular>
                                     </v-card-title>
                                     <v-card-text>
@@ -66,6 +67,8 @@
                                                 </tr>
                                             </tbody>
                                         </table>
+                                        <div class="text-h5 pt-5 pb-5">Worked Campaigns</div>
+                                        <div class="text">{{ workedCampaigns }}</div>
                                         <div class="text-h5 pt-5 pb-5">Objectives</div>
                                         <table class="query-list-table">
                                             <colgroup>
@@ -83,7 +86,7 @@
                                             <tbody>
                                                 <tr v-for="(objective, i) in day.objectives" :key="i">
                                                     <td>{{ objective.name }}</td>
-                                                    <td>{{ objective.campaign }}</td>
+                                                    <td>{{ campaignsList(objective.campaigns) }}</td>
                                                     <td>{{ objective.completion }} %</td>
                                                 </tr>
                                             </tbody>
@@ -96,7 +99,7 @@
                                     <v-card-actions class="justify-end">
                                         <v-btn
                                             text
-                                            @click="dialog.value = false"
+                                            @click="dialog.value = false; viewingDay=null"
                                         >Close</v-btn>
                                     </v-card-actions>
                                 </v-card>
@@ -146,9 +149,71 @@ export default {
                 else if (score<=100) {return 'success'}
                 else {return 'primary'}
             }
+        },
+        campaignsList() {
+            return (list) => {
+                let campaigns = []
+                for (let i=0; i<list.length; i++) {
+                    campaigns.push(list[i].name)
+                }
+                return campaigns.join(', ')
+            }
+        },
+        scoreLetter() {
+            return (score) => {
+              if (score < 0 || score > 100) {
+                return "Invalid Score";
+              }
+
+              if (score >= 92) {
+                return "S+";
+              } else if (score >= 86) {
+                return "S";
+              } else if (score >= 80) {
+                return "S-";
+              } else if (score >= 74) {
+                return "A+";
+              } else if (score >= 68) {
+                return "A";
+              } else if (score >= 62) {
+                return "A-";
+              } else if (score >= 56) {
+                return "B+";
+              } else if (score >= 50) {
+                return "B";
+              } else if (score >= 43) {
+                return "B-";
+              } else if (score >= 36) {
+                return "C+";
+              } else if (score >= 29) {
+                return "C";
+              } else if (score >= 21) {
+                return "C-";
+              } else if (score >= 13) {
+                return "D+";
+              } else if (score >= 5) {
+                return "D";
+              } else {
+                return "D-";
+              }
+            }
+        },
+        workedCampaigns() {
+            let campaigns = []
+            if (this.viewingDay) {
+                for (let i = 0; i < this.viewingDay.objectives.length; i++) {
+                    for (let j = 0; j < this.viewingDay.objectives[i].campaigns.length; j++) {
+                        campaigns.push(this.viewingDay.objectives[i].campaigns[j].name)
+                    }
+                }
+
+                campaigns = Array.from(new Set(campaigns));
+
+                return campaigns.join(', ')
+            }
+            return ''
         }
     },
-
     async created() {
         const message = await new Promise(resolve => {
             window.electronAPI.getDays()
@@ -173,8 +238,7 @@ export default {
                 }
             }
         }
-        console.log(this.gradient)
-    },
+    }
 };
 
 </script>
@@ -221,7 +285,7 @@ export default {
         width: fit-content !important;
     }
     table, th, td {
-        border: 1px solid #333;
+        border: 1px solid var(--text-secondary);
         text-align: center;
         vertical-align: middle;
         padding: 8px;

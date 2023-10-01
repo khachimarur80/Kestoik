@@ -12,6 +12,40 @@ protocol.registerSchemesAsPrivileged([
 ])
 let win
 
+function scoreLetter (score) {
+  if (score >= 92) {
+    return "S+";
+  } else if (score >= 86) {
+    return "S";
+  } else if (score >= 80) {
+    return "S-";
+  } else if (score >= 74) {
+    return "A+";
+  } else if (score >= 68) {
+    return "A";
+  } else if (score >= 62) {
+    return "A-";
+  } else if (score >= 56) {
+    return "B+";
+  } else if (score >= 50) {
+    return "B";
+  } else if (score >= 43) {
+    return "B-";
+  } else if (score >= 36) {
+    return "C+";
+  } else if (score >= 29) {
+    return "C";
+  } else if (score >= 21) {
+    return "C-";
+  } else if (score >= 13) {
+    return "D+";
+  } else if (score >= 5) {
+    return "D";
+  } else {
+    return "D-";
+  }
+}
+
 async function createWindow() {
   const preloadFilePath = path.join(__dirname, '../src', 'preload.js');
   win = new BrowserWindow({
@@ -58,28 +92,29 @@ app.on('ready', async () => {
   ipcMain.on('get-today', (event) => {
     const filePath = path.join(__dirname, '../src/assets', 'data.json');
     fs.readFile(filePath, 'utf-8', (err, data) => {
-      if (err) {
-        fs.writeFile(filePath, '{"days":[], "campaigns":[]}', () => {});
-      }
-      else {
+      try {
         const dayList = JSON.parse(data)['days'];
         const matchingDay = dayList.find(item => !item.finalized);
 
         win.webContents.send('get-today-response', matchingDay || null);
+      }
+      catch {
+        fs.writeFile(filePath, '{"days":[], "campaigns":[]}', () => {});
+        win.webContents.send('get-today-response', null);
       }
     });
   });
   ipcMain.on('get-campaign', (event, campaignName) => {
     const filePath = path.join(__dirname, '../src/assets', 'data.json');
     fs.readFile(filePath, 'utf-8', (err, data) => {
-      if (err) {
-        fs.writeFile(filePath, '{"days":[], "campaigns":[]}', () => {});
-      }
-      else {
+      try {
         const campaignsList = JSON.parse(data)['campaigns'];
         const matchingCampaign = campaignsList.find(item => item.name == campaignName);
 
         win.webContents.send('get-campaign-response', matchingCampaign || null);
+      }
+      catch {
+        fs.writeFile(filePath, '{"days":[], "campaigns":[]}', () => {});
       }
     });
   });
@@ -110,29 +145,25 @@ app.on('ready', async () => {
   ipcMain.on('save-today', (event, dayToSave) => {
     const filePath = path.join(__dirname, '../src/assets', 'data.json');
     fs.readFile(filePath, (err, data) => {
-      if (err) {
-        fs.writeFile(filePath, '{"days":[], "campaigns":[]}', () => {});
+      let totalData = JSON.parse(data)
+      const index = totalData['days'].findIndex(item => !item.finalized);
+
+      if (index !== -1) {
+        totalData['days'][index] = dayToSave;
       }
       else {
-        let totalData = JSON.parse(data)
-        const index = totalData['days'].findIndex(item => !item.finalized);
-
-        if (index !== -1) {
-          totalData['days'][index] = dayToSave;
-        }
-        else {
-          totalData['days'].push(dayToSave);
-        }
-        if (dayToSave.finalized) {
-          new Notification({
-            title: 'JSON DATA',
-            body: JSON.stringify(totalData['days'])
-          }).show()
-          fs.writeFile(filePath, JSON.stringify(totalData), ()=>{});
-          win.close()
-        }
-        fs.writeFile(filePath, JSON.stringify(totalData), ()=>{});
+        totalData['days'].push(dayToSave);
       }
+
+      if (dayToSave.finalized) {
+        new Notification({
+          title: dayToSave.day,
+          body: 'Score : ' + scoreLetter(dayToSave.score)
+        }).show()
+        fs.writeFile(filePath, JSON.stringify(totalData), ()=>{});
+        win.close()
+      }
+      fs.writeFile(filePath, JSON.stringify(totalData), ()=>{});
     });
   });
   ipcMain.on('save-campaigns', (event, campaignsToSave) => {
@@ -143,9 +174,7 @@ app.on('ready', async () => {
       }
       else {
         let totalData = JSON.parse(data)
-        console.log(totalData['campaigns'])
         totalData['campaigns'] = campaignsToSave
-        console.log(totalData['campaigns'])
         fs.writeFile(filePath, JSON.stringify(totalData), ()=>{});
       }
     });
