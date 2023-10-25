@@ -32,7 +32,7 @@
                             <div class="text-h4">
                                 <input style="outline: none;" v-model="editingCampaign.name">
                             </div>
-                            <div class="text-h6 mt-3 mb-3">Description</div>
+                            <div class="text-h6 mt-3 mb-3">{{ $t('message.description') }}</div>
                             <v-textarea 
                                 class="campaign-description" 
                                 v-model="editingCampaign.description"

@@ -19,15 +19,36 @@
             </v-icon>
           </v-btn>
           <v-spacer></v-spacer>
+          <v-menu offset-y>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn icon dense x-small style="self-align: flex-end;" @click="download" class="mr-1" v-bind="attrs" v-on="on">
+                <v-icon>
+                  mdi-earth
+                </v-icon>
+              </v-btn>
+            </template>
+            <div class="pt-2 d-flex flex-column">
+              <button @click="$i18n.locale='es'" v-if="$i18n.locale!='es'">
+                <span class="fi fi-es"></span>
+              </button>
+              <button @click="$i18n.locale='en'" v-if="$i18n.locale!='en'">
+                <span class="fi fi-gb"></span>
+              </button>
+              <button @click="$i18n.locale='ja'" v-if="$i18n.locale!='ja'">
+                <span class="fi fi-jp"></span>
+              </button>
+            </div>
+          </v-menu>
           <v-btn icon dense x-small style="self-align: flex-end;" @click="toggleTheme" class="mr-1">
             <v-icon>{{ darkTheme ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
           </v-btn>
+          <!--
           <v-btn icon dense x-small style="self-align: flex-end;" @click="download" class="mr-2">
             <v-icon>
               mdi-download
             </v-icon>
           </v-btn>
-          <!--<v-btn icon dense x-small style="self-align: flex-end;" @click="settings" class="ml-1">
+          <v-btn icon dense x-small style="self-align: flex-end;" @click="settings" class="ml-1">
             <v-icon>
               mdi-cog-outline
             </v-icon>
@@ -35,12 +56,12 @@
         </div>
         <div class="d-flex align-center justify-center mt-9">
             <v-btn-toggle dense v-model="view">
-              <v-btn>Today</v-btn>
-              <v-btn>Campaigns</v-btn>
-              <v-btn>Progress</v-btn>
+              <v-btn>{{ $t('message.today') }}</v-btn>
+              <v-btn>{{ $t('message.campaigns') }}</v-btn>
+              <v-btn>{{ $t('message.progress') }}</v-btn>
             </v-btn-toggle>
         </div>
-        <TodayView ref="todayChild" v-if="view==0" @download="download"></TodayView>
+        <TodayView ref="todayChild" v-if="view==0"></TodayView>
         <CampaignView v-if="view==1"></CampaignView>
         <DataView v-if="view==2"></DataView>
       </div>
@@ -114,6 +135,25 @@ export default {
     capitalize(str) {
       return str.charAt(0).toUpperCase() + str.slice(1);
     },
+    getActivities(objective, day) {
+      let availableActivities = []
+
+      objective.activities.forEach(
+          activity => availableActivities.push(activity.name)
+      )
+
+      let registeredActivities = []
+
+      day.activities.forEach(
+          activity => { registeredActivities.push(activity) }
+      )
+      
+      let result = registeredActivities.filter(activity => availableActivities.includes(activity.name))
+      let notCompleted = objective.activities.filter(activity => !result.map(obj => obj.name).includes(activity.name))
+      notCompleted.forEach(activity => {activity.performace = 0; activity.satisfaction = 0})
+
+      return result.concat(notCompleted)
+    },
     async download() {
       const message = await new Promise(resolve => {
         window.electronAPI.getToday()
@@ -152,21 +192,28 @@ export default {
       md.push('## Objetivos\n')
       if (message.activities.length) {
         message.objectives.forEach((objective) => {
-
+          md.push('---\n')
           const formattedObjective = this.capitalize(objective.name);
-          const formattedCompletion = objective.completion+'%';
-          md.push('| Objective | Completion |');
+          md.push('###'+formattedObjective+'\n')
+          md.push('Campaigns : '+objective.campaigns.map(obj => obj.name).join(', ')+'\n')
+          md.push('| Activity | Accuracy | Satisfaction | Performance');
           md.push('| --- | --- |');
-          md.push(`| ${formattedObjective} | ${formattedCompletion}`);
+
+          let activities = this.getActivities(objective, message)
+          
+          activities.forEach((activity) => {
+            md.push(`| ${activity.name} | ${activity.realDuration}/${activity.duration} | ${(activity.satisfaction + 1)*20} % | ${activity.performace} % |`)
+          })
           md.push('| --- | --- |');
-          md.push(`\nDescription : ${objective.description}\n`); // Add observation in a new row
+          md.push(`\nDescription : ${objective.description}`);
+          md.push(`\nObservations : ${objective.observations}\n`);
         });
       }
       md.push('## Review')
       md.push(this.capitalize(message.evaluation))
       md.push('### Score : ' + message.score+'%')
       md.push('---')
-      window.electronAPI.saveDayFile(md)
+      //window.electronAPI.saveDayFile(md)
     }
   },
   mounted() {
@@ -210,7 +257,8 @@ export default {
 
 <style>
 ::-webkit-scrollbar {
-  display: none;
+  height: 0px;
+  width: 0px;
 }
 #dashboard {
   height: 100%;

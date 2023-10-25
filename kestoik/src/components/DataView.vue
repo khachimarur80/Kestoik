@@ -1,113 +1,153 @@
 <template>
     <div id="progress">
         <div class="container">
-            <h2>Puntuación</h2>
-            <div class="graph-display">
-                <v-sparkline
-                    :value="values"
-                    :smooth="radius || false"
-                    :padding="padding"
-                    :line-width="width"
-                    :stroke-linecap="lineCap"
-                    :gradient="gradient"
-                    :gradient-direction="gradientDirection"
-                ></v-sparkline>
-            </div>
-            <div class="days-display">
-                <v-card v-for="(day, i) in days" :key="i">
-                    <v-card-title>
-                        {{ day.day }}
-                    </v-card-title>
-                    <v-card-text class="d-flex justify-center align-center">
-                        <v-progress-circular :value="day.score" width="3" size="50" :color="scoreColor(day.score)">
-                            {{ scoreLetter(day.score) }}
-                        </v-progress-circular>
-                    </v-card-text>
-                    <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-dialog>
-                            <template v-slot:activator="{ on, attrs }">
-                                <v-btn
-                                    outlined
-                                    color="primary"
-                                    v-bind="attrs"
-                                    v-on="on"
-                                    @click="viewingDay=day"
-                                >View</v-btn>
-                            </template>
-                            <template v-slot:default="dialog">
-                                <v-card>
-                                    <v-card-title>
-                                        <div class="text-h4">{{ day.day }}</div>
-                                        <v-spacer></v-spacer>
-                                        <v-progress-circular :value="day.score" width="3" size="50" :color=scoreColor(day.score)>
-                                            {{ scoreLetter(day.score) }}
-                                        </v-progress-circular>
-                                    </v-card-title>
-                                    <v-card-text>
-                                        <div class="text-h5 pt-5 pb-5">Logs</div>
-                                        <table class="query-list-table">
-                                            <colgroup>
-                                            <col>
-                                            <col>
-                                            <col>
-                                            </colgroup>
-                                            <thead>
-                                            <tr>
-                                                <th>Activity</th>
-                                                <th>Start</th>
-                                                <th>End</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr v-for="(activity, i) in day.activities" :key="i">
-                                                    <td>{{ activity.name }}</td>
-                                                    <td>{{ activity.start }}</td>
-                                                    <td>{{ activity.end }}</td>
+            <div class="text-h4 mb-3">{{ $t('message.score') }}</div>
+            <div style="width:100%" class="d-flex pa-3 align-center flex-column">
+                <div style="width: 100%">
+                    <v-divider></v-divider>
+                </div>
+                <div class="graph-display mb-3">
+                    <v-sparkline
+                        :value="values"
+                        :smooth="radius || false"
+                        :padding="padding"
+                        :line-width="width"
+                        :stroke-linecap="lineCap"
+                        :gradient="gradient"
+                        :gradient-direction="gradientDirection"
+                    ></v-sparkline>
+                </div>
+                <div style="width: 100%">
+                    <v-divider></v-divider>
+                </div>
+                <div class="days-display mt-10">
+                    <v-card v-for="(day, i) in days" :key="i">
+                        <v-card-title>
+                            {{ day.day }}
+                        </v-card-title>
+                        <v-card-text class="d-flex justify-center align-center">
+                             <v-progress-circular :value="day.score" width="3" size="50" :color="scoreColor(day.score)">
+                                {{ scoreLetter(day.score) }}
+                            </v-progress-circular>
+                        </v-card-text>
+                        <v-card-actions>
+                            <v-spacer></v-spacer>
+                            <v-dialog>
+                                <template v-slot:activator="{ on, attrs }">
+                                    <v-btn
+                                        outlined
+                                        color="primary"
+                                        v-bind="attrs"
+                                        v-on="on"
+                                        @click="viewingDay=day"
+                                    >{{ $t('message.view') }}</v-btn>
+                                </template>
+                                <template v-slot:default="dialog">
+                                    <v-card>
+                                        <v-card-title>
+                                            <div class="text-h4">{{ day.day }}</div>
+                                            <v-spacer></v-spacer>
+                                            <v-progress-circular :value="day.accuracyScore" width="3" size="40" :color="scoreColor(day.accuracyScore)" class="mx-1">
+                                                {{ scoreLetter(day.accuracyScore) }}
+                                            </v-progress-circular>
+                                             <v-progress-circular :value="day.satisfactionScore" width="3" size="40" :color="scoreColor(day.satisfactionScore)" class="mx-1">
+                                                {{ scoreLetter(day.satisfactionScore) }}
+                                            </v-progress-circular>
+                                             <v-progress-circular :value="day.performanceScore" width="3" size="40" :color="scoreColor(day.performanceScore)" class="mx-1">
+                                                {{ scoreLetter(day.performanceScore) }}
+                                            </v-progress-circular>
+                                            <v-progress-circular :value="day.score" width="3" size="50" :color=scoreColor(day.score) class="mx-1">
+                                                {{ scoreLetter(day.score) }}
+                                            </v-progress-circular>
+                                        </v-card-title>
+                                        <v-card-text>
+                                            <div class="text-h5 pt-5 pb-5">{{ $t('message.logs') }}</div>
+                                            <table class="query-list-table">
+                                                <colgroup>
+                                                <col>
+                                                <col>
+                                                <col>
+                                                </colgroup>
+                                                <thead>
+                                                <tr>
+                                                    <th>{{ $t('message.activity') }}</th>
+                                                    <th>{{ $t('message.start') }}</th>
+                                                    <th>{{ $t('message.end') }}</th>
                                                 </tr>
-                                            </tbody>
-                                        </table>
-                                        <div class="text-h5 pt-5 pb-5">Worked Campaigns</div>
-                                        <div class="text">{{ workedCampaigns }}</div>
-                                        <div class="text-h5 pt-5 pb-5">Objectives</div>
-                                        <table class="query-list-table">
-                                            <colgroup>
-                                                <col>
-                                                <col>
-                                                <col>
-                                            </colgroup>
-                                            <thead>
-                                            <tr>
-                                                <th>Objective</th>
-                                                <th>Campaign</th>
-                                                <th>Completion</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr v-for="(objective, i) in day.objectives" :key="i">
-                                                    <td>{{ objective.name }}</td>
-                                                    <td>{{ campaignsList(objective.campaigns) }}</td>
-                                                    <td>{{ objective.completion }} %</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                        <div class="text-h5 pt-5 pb-5" v-if="day.additionals.length">Aditional</div>
-                                        <div class="text" v-for="(additional, i) in day.additionals" :key="i">{{ additional }}</div>
-                                        <div class="text-h5 pt-5 pb-5">Evaluation</div>
-                                        <div class="text">{{ day.evaluation }}</div>
-                                    </v-card-text>
-                                    <v-card-actions class="justify-end">
-                                        <v-btn
-                                            text
-                                            @click="dialog.value = false; viewingDay=null"
-                                        >Close</v-btn>
-                                    </v-card-actions>
-                                </v-card>
-                            </template>
-                        </v-dialog>
-                        <v-spacer></v-spacer>
-                    </v-card-actions>
-                </v-card>
+                                                </thead>
+                                                <tbody>
+                                                    <tr v-for="(activity, i) in day.activities" :key="i">
+                                                        <td>{{ activity.name }}</td>
+                                                        <td>{{ activity.start }}</td>
+                                                        <td>{{ activity.end }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <div class="text-h5 pt-5 pb-5">{{ $t('message.workedCampaigns') }}</div>
+                                            <div class="text">{{ workedCampaigns }}</div>
+                                            <div class="text-h5 pt-5 pb-5">{{ $t('message.objectives') }}</div>
+                                            <div v-for="(objective, i) in day.objectives" :key="i">
+                                                <v-divider></v-divider>
+                                                <div class="text-h6">
+                                                    {{ objective.name }}
+                                                </div>
+                                                <div class="text-subtitle-1  my-2">
+                                                    {{ $t('message.campaigns') }}: {{ campaignsList(objective.campaigns) }}
+                                                </div>
+                                                <table class="query-list-table">
+                                                    <colgroup>
+                                                        <col>
+                                                        <col>
+                                                        <col>
+                                                    </colgroup>
+                                                    <thead>
+                                                    <tr>
+                                                        <th>{{ $t('message.activity') }}</th>
+                                                        <th>{{ $t('message.accuracy') }}</th>
+                                                        <th>{{ $t('message.satisfaction') }}</th>
+                                                        <th>{{ $t('message.performance') }}</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr v-for="(activity, i) in day.activities" :key="i">
+                                                            <td>{{ activity.name }}</td>
+                                                            <td>{{ activity.realDuration }}/{{ activity.duration }}</td>
+                                                            <td>{{ (1 + activity.satisfaction)*20 }} %</td>
+                                                            <td>{{ activity.performance }} %</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                                <div class="text-subtitle-1 mt-2">
+                                                    {{ $t('message.description') }}:
+                                                </div>
+                                                <div class="text-body-1">
+                                                    {{ objective.description }}
+                                                </div>
+                                                <div class="text-subtitle-1 mt-2">
+                                                    {{ $t('message.observations') }}:
+                                                </div>
+                                                <div class="text-body-1">
+                                                    {{ objective.observations }}
+                                                </div>
+                                            </div>
+                                            <div class="text-h5 pt-5 pb-5" v-if="day.additionals.length">Aditional</div>
+                                            <div class="text" v-for="(additional, i) in day.additionals" :key="i">{{ additional }}</div>
+                                            <div class="text-h5 pt-5 pb-5">{{ $t('message.evaluation') }}</div>
+                                            <div class="text">{{ day.evaluation }}</div>
+                                        </v-card-text>
+                                        <v-card-actions class="justify-end">
+                                            <v-btn
+                                                text
+                                                @click="dialog.value = false; viewingDay=null"
+                                            >{{ $t('message.close') }}</v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </template>
+                            </v-dialog>
+                            <v-spacer></v-spacer>
+                        </v-card-actions>
+                    </v-card>
+                </div>
             </div>
         </div>
     </div>
@@ -254,7 +294,7 @@ export default {
         height: 100%;
         width: 100%;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         flex-direction: column;
         overflow: scroll;
     }
