@@ -7,6 +7,10 @@ module.exports = defineConfig({
       preload: 'src/preload.js',
       builderOptions: {
         extraResources: ['src'],
+        appId: 'Kestoik.com',
+        mac: {
+          icon: 'src/assets/logo.icns'
+        }
       },
     },
   },

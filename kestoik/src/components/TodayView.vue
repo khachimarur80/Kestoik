@@ -474,7 +474,6 @@
                                 auto-grow
                                 v-model="day.evaluation"
                                 dense
-                                autofocus
                                 @keydown.tab.prevent="insertTab"
                                 :rows="5"
                                 outlined
