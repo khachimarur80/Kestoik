@@ -459,7 +459,6 @@
                                     auto-grow
                                     v-model="objective.observations"
                                     dense
-                                    autofocus
                                     @keydown.tab.prevent="insertTab"
                                     :rows="3"
                                     outlined
